@@ -1,0 +1,101 @@
+/* Petals by Bavi — bouquet sharing panel */
+#petals-share-panel {
+  margin: 0 auto;
+  min-height: 0;
+  text-align: center;
+}
+#petals-share-panel .petals-share-heading {
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 2.2rem 0 0.5rem;
+}
+#petals-share-panel .petals-share-sub {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin: 0 0 1rem;
+  max-width: 26rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+#petals-share-panel .petals-share-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.4rem 1rem 1.4rem;
+}
+#petals-share-panel .petals-share-actions button,
+#petals-share-panel .petals-share-actions a.petals-share-btn {
+  font-family: inherit;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.1rem;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: min(19rem, 86vw);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+#petals-share-panel .petals-share-actions button:hover,
+#petals-share-panel .petals-share-actions a.petals-share-btn:hover {
+  background: #000;
+  color: #fff;
+}
+#petals-share-panel .petals-share-actions button.petals-share-primary,
+#petals-share-panel .petals-share-actions a.petals-share-primary {
+  background: #000;
+  color: #fff;
+}
+#petals-share-panel .petals-share-actions button.petals-share-primary:hover {
+  background: #0a0000;
+}
+#petals-share-panel .petals-share-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+#petals-share-panel .petals-share-actions a.petals-share-link {
+  background: none;
+  border: none;
+  text-decoration: underline;
+  padding: 0.5rem 0;
+  width: auto;
+}
+#petals-share-panel .petals-share-error {
+  color: #a33;
+  font-size: 0.72rem;
+  margin: 0.4rem auto;
+}
+
+/* toast */
+#petals-share-toast {
+  position: fixed;
+  top: 2.5rem;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+  z-index: 10001;
+  background: #F9F9EE;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 9999px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  font-size: 0.72rem;
+  padding: 0.65rem 1.1rem;
+  max-width: 88vw;
+  text-align: center;
+  transition: opacity 0.25s ease;
+}
+#petals-share-toast.petals-share-toast-hide {
+  opacity: 0;
+  pointer-events: none;
+}
