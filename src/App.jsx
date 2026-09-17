@@ -18,12 +18,13 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  const { pathname } = useLocation()
+
   return (
     <BouquetProvider>
       <ScrollToTop />
       <div className="app-container">
-        {/* Navbar on all pages */}
-        <Navbar />
+        {pathname !== '/' && <Navbar />}
 
         <main className="main-content">
           <Routes>

@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer className="site-footer">
       <p className="footer-order-text">
-        Instagram @petals_by_bavi · WhatsApp 8883537574 · DM to order
+        DM to order
       </p>
       <div className="footer-social-row">
         <button
