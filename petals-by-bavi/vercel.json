@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.mjs",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "digibouquet.vercel.app/**",
+          "assets.pauwee.com/**",
+          "rewrite.mjs",
+          "fav-icon.png",
+          "meta-tag.jpeg"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/server.mjs" }
+  ]
+}

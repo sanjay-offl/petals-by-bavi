@@ -149,6 +149,24 @@ const PRIVACY_SSR_PATTERNS = [
   ]
 ]
 
+// The <strong>-prefixed patterns above only match the SSR HTML (the same
+// paragraphs render in flight payloads as React elements, without the tag), so
+// the flight copies would keep the old text and hydration would fail with
+// React error #418. These plain-text pairs hit the text in BOTH the SSR HTML
+// and the flight payloads (labels are consumed from SSR first, so they only
+// rewrite the flight side).
+const PRIVACY_FLIGHT_PATTERNS = [
+  ['Usage analytics.', 'Usage information.'],
+  [
+    ' We use Google Analytics to collect information about how the site is used, such as pages visited and general traffic patterns. Google may collect information such as your IP address, browser type, and device type in accordance with its privacy policies.',
+    ' If analytics tools are enabled, they may collect general information about website usage, such as pages visited, browser type, device type, and general traffic patterns.'
+  ],
+  [
+    ' When you create and share a bouquet, we store the bouquet design (flowers, card message, and related settings) so it can be accessed via its link. We do not require your name, email address, or other contact information to use the site.',
+    ' When you create and share a bouquet, the bouquet design, selected flowers, card message, and related settings may be stored so that the bouquet can be accessed through its sharing link. Avoid including personal or sensitive information in publicly shared bouquets.'
+  ]
+]
+
 // li3 "Advertising" — appears differently in SSR (with <a>) and in flight as the "9:" resolution.
 const PRIVACY_LI_SSR_RE = /<li><strong>Advertising\.<\/strong>[\s\S]*?<\/li>/i
 const PRIVACY_LI_SSR_NEW =
@@ -191,9 +209,16 @@ function marginTokensFromImgTag(imgTag) {
   return tokens.join(' ')
 }
 
+function escapeForRSC(html, escapeLevel) {
+  if (escapeLevel === 0) return html
+  if (escapeLevel === 1) return html.replace(/"/g, '\\"')
+  if (escapeLevel === 2) return html.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  return html
+}
+
 function newElement(logoClass, escaped) {
   const raw = '["$","p",null,{"className":"' + logoClass + '","children":"' + SITE_NAME + '"}]'
-  return escaped ? raw.replace(/"/g, '\\"') : raw
+  return escapeForRSC(raw, escaped ? 1 : 0)
 }
 
 function spliceFlightLogos(s, logoClass) {
@@ -299,6 +324,9 @@ function rewritePrivacy(s) {
   let out = s
   if (!out.includes(PRIVACY_TRIGGER) && !out.includes('Sale of data')) return out
   for (const [from, to] of PRIVACY_SSR_PATTERNS) {
+    if (out.includes(from)) out = out.split(from).join(to)
+  }
+  for (const [from, to] of PRIVACY_FLIGHT_PATTERNS) {
     if (out.includes(from)) out = out.split(from).join(to)
   }
   // Advertising li (SSR)
@@ -429,6 +457,35 @@ export function rewritePetals(body, opts = {}) {
   s = s.split('@pauline_makes').join('@petals_by_bavi')
   s = rewriteHeadMeta(s)
   s = injectShare(s, !!opts.html)
+  if (opts.rsc) {
+    const badLines = (str) => {
+      const bad = new Set()
+      const lines = str.split('\n')
+      for (let i = 0; i < lines.length; i++) {
+        const colonIdx = lines[i].indexOf(':')
+        if (colonIdx > 0 && /^\d+$/.test(lines[i].slice(0, colonIdx))) {
+          try {
+            JSON.parse(lines[i].slice(colonIdx + 1))
+          } catch (e) {
+            bad.add(i)
+          }
+        }
+      }
+      return bad
+    }
+    // RSC lines that didn't parse as JSON before the rewrite (module references
+    // like "I[...]" and "$S..." shorthands are valid RSC, not JSON) are never
+    // touched by our transforms, so only fall back when a rewrite made a
+    // previously-valid line unparseable.
+    const beforeBad = badLines(String(body))
+    const afterBad = badLines(s)
+    for (const i of afterBad) {
+      if (!beforeBad.has(i)) {
+        console.error('[rewrite] Flight payload corrupted, serving original (line ' + i + '):', s.split('\n')[i].slice(0, 160))
+        return body
+      }
+    }
+  }
   return s
 }
 

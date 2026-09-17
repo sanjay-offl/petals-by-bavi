@@ -3,9 +3,10 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { rewritePetals, shouldRewrite } from './rewrite.mjs'
 
+const BASE_DIR = new URL('.', import.meta.url).pathname
 const HOST = '127.0.0.1'
 const PORT = 3000
-const ROOT = '/home/sanjay/digibouquet.vercel.app/digibouquet.vercel.app'
+const ROOT = path.join(BASE_DIR, 'digibouquet.vercel.app')
 const UPSTREAM = 'https://digibouquet.vercel.app'
 
 const MIME = {
@@ -112,7 +113,8 @@ async function proxy(req, res) {
   const reqUrl = new URL(req.url, `http://${HOST}:${PORT}`)
   const out = rewritePetals(buf, {
     hero: reqUrl.pathname === '/',
-    html: ct.includes('text/html')
+    html: ct.includes('text/html'),
+    rsc: ct.includes('text/x-component')
   })
   res.end(out)
 }
@@ -148,7 +150,7 @@ async function servePetalsImage(req, res, pathname) {
   }
 }
 
-const server = http.createServer(async (req, res) => {
+const handler = async (req, res) => {
   try {
     const reqUrl = new URL(req.url, `http://${HOST}:${PORT}`)
     const isRsc = isRscRequest(reqUrl, req.headers)
@@ -167,7 +169,8 @@ const server = http.createServer(async (req, res) => {
           await servePetalsImage(req, res, pathname)
           return
         }
-        localPath = path.join(ROOT, pathname)
+        const filename = pathname.slice('/__petals/'.length)
+        localPath = path.join(BASE_DIR, 'digibouquet.vercel.app', '__petals', filename)
       } else if (pathname === '/og-petals.png') {
         localPath = path.join(ROOT, 'og-petals.png')
       } else if (pathname === '/fav-icon.png') {
@@ -189,6 +192,18 @@ const server = http.createServer(async (req, res) => {
           res.end(out)
           return
         }
+      } else if (pathname.startsWith('/__petals/')) {
+        const ext = path.extname(localPath).toLowerCase()
+        const PETALS_CT = { '.css': 'text/css', '.js': 'application/javascript' }
+        const petalsData = await fs.readFile(localPath).catch(() => null)
+        if (petalsData) {
+          res.writeHead(200, {
+            'Content-Type': PETALS_CT[ext] || MIME[ext] || 'application/octet-stream',
+            'Content-Length': petalsData.length
+          })
+          res.end(petalsData)
+          return
+        }
       } else if (await serveLocal(res, localPath)) {
         return
       }
@@ -202,10 +217,16 @@ const server = http.createServer(async (req, res) => {
       res.end()
     }
   }
-})
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(`Petals by Bavi serving at http://localhost:${PORT}`)
-  console.log(`root: ${ROOT}`)
-  console.log(`upstream (rebranded): ${UPSTREAM}`)
-})
+const server = http.createServer(handler)
+
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  server.listen(PORT, HOST, () => {
+    console.log(`Petals by Bavi serving at http://localhost:${PORT}`)
+    console.log(`root: ${ROOT}`)
+    console.log(`upstream (rebranded): ${UPSTREAM}`)
+  })
+}
+
+export default handler
