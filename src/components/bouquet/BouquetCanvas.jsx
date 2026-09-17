@@ -124,14 +124,16 @@ export default function BouquetCanvas({
         })}
       </div>
 
-      {/* 3. Bush Top Sleeve Overlay (front of the bouquet wrapping) */}
-      <img
-        src={bushTopUrl}
-        alt="bush top"
-        className="bush-top-layer"
-        style={isCompact ? { width: '280px', height: '220px' } : {}}
-        loading="eager"
-      />
+      {/* 3. Color mode uses a separate front sleeve; mono assets are complete illustrations. */}
+      {bushTopUrl && (
+        <img
+          src={bushTopUrl}
+          alt="bush top"
+          className="bush-top-layer"
+          style={isCompact ? { width: '280px', height: '220px' } : {}}
+          loading="eager"
+        />
+      )}
     </div>
   )
 }

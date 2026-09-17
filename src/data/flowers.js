@@ -124,6 +124,7 @@ export function getBushBgPath(greeneryIndex = 0, mode = 'color') {
 
 export function getBushTopPath(greeneryIndex = 0, mode = 'color') {
   const num = (greeneryIndex % 3) + 1
+  if (mode === 'mono') return null
   return `/assets/bush/${mode}/bush-${num}-top.png`
 }
 
